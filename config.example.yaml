@@ -1,0 +1,76 @@
+# Example configuration file for Qwen RAG
+# Copy this to config.yaml and modify as needed
+
+# API Configuration
+api:
+  base_url: "http://localhost:1234/v1"
+  api_key: "dummy"
+  
+  # Qwen Model Configuration
+  embedding_model: "text-embedding-qwen3-embedding-4b"
+  embedding_max_tokens: 8192  # 8k context window for embedding
+  
+  reranking_model: "qwen.qwen3-reranker-4b"
+  reranking_max_tokens: 32768  # 32k context window for reranking
+  
+  # Request settings
+  timeout: 300  # seconds
+  max_retries: 3
+
+# Database Configuration
+database:
+  path: "./rag_db"
+  table_name: "code_chunks"
+  
+  # Vector search settings
+  search_limit: 20
+  nprobes: 1
+
+# Chunking Configuration
+chunking:
+  max_tokens: 1000  # Maximum tokens per chunk
+  overlap_tokens: 100  # Overlap between chunks
+  
+  # Tree-sitter specific settings
+  prefer_functions: true  # Prefer function-level chunking
+  include_comments: true  # Include comments in chunks
+  collapse_large_functions: true  # Collapse large functions to signatures
+  
+  # File processing settings
+  max_file_size_mb: 10  # Maximum file size to process
+  supported_extensions:
+    - ".py"
+    - ".js"
+    - ".ts"
+    - ".tsx"
+    - ".jsx"
+    - ".java"
+    - ".cpp"
+    - ".c"
+    - ".h"
+    - ".hpp"
+    - ".rs"
+    - ".go"
+    - ".cs"
+    - ".php"
+    - ".rb"
+    - ".swift"
+    - ".kt"
+    - ".scala"
+    - ".sh"
+    - ".sql"
+    - ".md"
+    - ".txt"
+    - ".yaml"
+    - ".yml"
+    - ".json"
+    - ".xml"
+    - ".html"
+    - ".css"
+
+# Search Configuration
+search:
+  use_reranking: true  # Enable reranking for better results
+  top_k_initial: 20  # Initial number of results to retrieve
+  top_k_final: 5  # Final number of results after reranking
+  similarity_threshold: 0.1  # Minimum similarity threshold 

@@ -1,0 +1,10 @@
+include README.md
+include LICENSE
+include requirements.txt
+include config.example.yaml
+recursive-include code_rag *.py
+recursive-include code_rag *.yaml
+exclude test_setup.py
+exclude test_repo2/*
+global-exclude __pycache__
+global-exclude *.py[co] 
