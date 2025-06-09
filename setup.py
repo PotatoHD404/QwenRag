@@ -20,7 +20,7 @@ setup(
     description="A powerful RAG system for querying code repositories using tree-sitter parsing, LanceDB vector storage, and Qwen models",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/QwenRag",
+    url="https://github.com/PotatoHD404/QwenRag",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -49,8 +49,8 @@ setup(
     },
     keywords="rag, code search, embeddings, vector database, qwen, tree-sitter, semantic search",
     project_urls={
-        "Bug Reports": "https://github.com/yourusername/QwenRag/issues",
-        "Source": "https://github.com/yourusername/QwenRag",
-        "Documentation": "https://github.com/yourusername/QwenRag#readme",
+        "Bug Reports": "https://github.com/PotatoHD404/QwenRag/issues",
+        "Source": "https://github.com/PotatoHD404/QwenRag",
+        "Documentation": "https://github.com/PotatoHD404/QwenRag#readme",
     },
 ) 
