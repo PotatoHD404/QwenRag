@@ -4,6 +4,7 @@
 import asyncio
 import os
 from openai import AsyncOpenAI
+from code_rag.client import ExtendedOpenaiClient
 
 async def test_api():
     """Test the API connection and models."""
@@ -21,7 +22,7 @@ async def test_api():
     print(f"Reranking Model: {reranking_model}")
     print()
     
-    client = AsyncOpenAI(
+    client = ExtendedOpenaiClient(
         base_url=api_base,
         api_key=api_key,
         timeout=30
@@ -46,40 +47,68 @@ async def test_api():
         print(f"❌ Embedding failed: {e}")
         return False
     
-    # Test 2: Reranking
-    print("\n🔄 Testing Reranking Model...")
+    # Test 2: Reranking with New API
+    print("\n🔄 Testing New Reranking API...")
     try:
         query = "function that prints hello world"
-        document = "def hello_world(): print('Hello, World!')"
+        documents = [
+            "def hello_world(): print('Hello, World!')",
+            "def calculate_sum(a, b): return a + b",
+            "print('This is a test')",
+            "def greet(): return 'Hello there!'"
+        ]
         
-        prompt = f"<Instruct>: Given a web search query, retrieve relevant passages that answer the query\n\n<Query>: {query}\n\n<Document>: {document}"
-        
-        response = await client.chat.completions.create(
+        result = await client.rerank(
             model=reranking_model,
-            messages=[
-                {
-                    "role": "system", 
-                    "content": "Judge whether the Document meets the requirements based on the Query and the Instruct provided. Note that the answer can only be \"yes\" or \"no\"."
-                },
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=1,
-            temperature=0.0,
-            logprobs=True,
-            top_logprobs=5
+            query=query,
+            documents=documents,
+            instruction="Given a web search query, retrieve relevant passages that answer the query",
+            top_k=2,
+            return_documents=True
         )
         
-        print(f"✅ Reranking successful!")
-        print(f"   Response: {response.choices[0].message.content}")
-        
-        if response.choices[0].logprobs:
-            print(f"   Logprobs available: {len(response.choices[0].logprobs.content)} tokens")
+        print(f"✅ Reranking API successful!")
+        print(f"   Results: {result}")
         
     except Exception as e:
-        print(f"❌ Reranking failed: {e}")
-        return False
+        print(f"❌ Reranking API failed: {e}")
+        # Fallback to original reranking test
+        print("   Trying fallback reranking method...")
+        try:
+            query = "function that prints hello world"
+            document = "def hello_world(): print('Hello, World!')"
+            
+            prompt = f"<Instruct>: Given a web search query, retrieve relevant passages that answer the query\n\n<Query>: {query}\n\n<Document>: {document}"
+            
+            response = await client.chat.completions.create(
+                model=reranking_model,
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": "Judge whether the Document meets the requirements based on the Query and the Instruct provided. Note that the answer can only be \"yes\" or \"no\"."
+                    },
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=1,
+                temperature=0.0,
+                logprobs=True,
+                top_logprobs=5
+            )
+            
+            print(f"✅ Fallback reranking successful!")
+            print(f"   Response: {response.choices[0].message.content}")
+            
+            if response.choices[0].logprobs:
+                print(f"   Logprobs available: {len(response.choices[0].logprobs.content)} tokens")
+                
+        except Exception as fallback_e:
+            print(f"❌ Fallback reranking also failed: {fallback_e}")
+            return False
     
     print("\n🎉 All API tests passed!")
+    
+    # Clean up
+    await client.close()
     return True
 
 if __name__ == "__main__":

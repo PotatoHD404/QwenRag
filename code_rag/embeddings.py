@@ -6,6 +6,7 @@ import openai
 from openai import AsyncOpenAI
 
 from .config import CodeRAGConfig
+from .client import ExtendedOpenaiClient
 
 
 class EmbeddingService:
@@ -13,7 +14,7 @@ class EmbeddingService:
     
     def __init__(self, config: CodeRAGConfig):
         self.config = config
-        self.client = AsyncOpenAI(
+        self.client = ExtendedOpenaiClient(
             base_url=config.api.base_url,
             api_key=config.api.api_key,
             timeout=config.api.timeout
@@ -73,7 +74,7 @@ class RerankingService:
     
     def __init__(self, config: CodeRAGConfig):
         self.config = config
-        self.client = AsyncOpenAI(
+        self.client = ExtendedOpenaiClient(
             base_url=config.api.base_url,
             api_key=config.api.api_key,
             timeout=config.api.timeout
@@ -87,6 +88,34 @@ class RerankingService:
         if not documents:
             return []
             
+        try:
+            # Use the new rerank method from ExtendedOpenaiClient
+            result = await self.client.rerank(
+                model=self.config.api.reranking_model,
+                query=query,
+                documents=documents,
+                instruction="Given a web search query, retrieve relevant passages that answer the query",
+                top_k=top_k,
+                return_documents=False
+            )
+            
+            # Extract indices from the result
+            if 'results' in result:
+                return [item['index'] for item in result['results']]
+            else:
+                # Fallback to original order
+                return list(range(min(top_k, len(documents))))
+            
+        except Exception as e:
+            print(f"Error during reranking: {e}")
+            # Fallback to original order with custom reranking
+            return await self._fallback_rerank(query, documents, top_k)
+    
+    async def _fallback_rerank(self, query: str, documents: List[str], top_k: int) -> List[int]:
+        """
+        Fallback reranking method when the main rerank API fails.
+        Returns indices of documents sorted by relevance score.
+        """
         try:
             # Create reranking prompts
             scores = []
@@ -109,10 +138,10 @@ class RerankingService:
             return [idx for idx, score in scores[:top_k]]
             
         except Exception as e:
-            print(f"Error during reranking: {e}")
-            # Fallback to original order
+            print(f"Error during fallback reranking: {e}")
+            # Final fallback to original order
             return list(range(min(top_k, len(documents))))
-    
+
     async def _rerank_batch(self, query: str, documents: List[str], indices: List[int]) -> List[tuple]:
         """Rerank a batch of documents."""
         results = []
